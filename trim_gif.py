@@ -25,6 +25,7 @@ def create_new_gif(input_gif_path, output_gif_path, end_frame):
         print(f"Trimming Frame {i + 1}...")  #log the frame being processed
 
     #save the new gif
+    print(f"Creating GIF (this can take awhile)")
     frames[0].save(output_gif_path, save_all=True, append_images=frames[1:], duration=gif.info['duration'], loop=0)
     print(f"New GIF created successfully: {output_gif_path}")
     
