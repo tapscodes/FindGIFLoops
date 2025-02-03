@@ -129,7 +129,7 @@ def process_gif():
 
     if duplicate_frame == -1:
         # "No loop could be found" case
-        log_box.insert(tk.END, "No identical frame found. The entire GIF will be used.\n")
+        log_box.insert(tk.END, "No identical frame found.\n")
         log_box.yview(tk.END)
         messagebox.showinfo("No Loop Found", "No loop could be found in the GIF.")
         sys.exit()  #terminate immediately
