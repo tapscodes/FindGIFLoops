@@ -1,5 +1,5 @@
 # GIF Frame Duplicate Trimmer
-check when the first duplicate frame in a GIF is and loop right before it to make a perfectly looping GIF
+A simple python program to turn a normal GIF into a perfectly looping GIF (if possible)
 ## Requirements/Usage
 1. Install Python from https://www.python.org/
 2. Run the command ```pip install tkinterdnd2 Pillow``` to install tkinterdnd2 and pillow
