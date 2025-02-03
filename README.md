@@ -2,7 +2,7 @@
 check when the first duplicate frame in a GIF is
 ## Requirements
 1. Install Python from https://www.python.org/
-2. Run the command ```pip install pillow imagehash``` to install imagehash and pillow
+2. Run the command ```pip install pillow imagehash tkinterdnd2``` to install imagehash and pillow
 3. Put your gif in the same folder as check_duped_frame.py and call it "predupe.gif"
 4. Run the script by pasting ```python check_duped_no_alpha_no_async.py``` in the terminal (or python3 if on mac)
 5. Run the trimming script by pasting ```python trim_gif.py (frame number)``` with the frame number given by the previous script to create a trimmed looping version of the input gif.
