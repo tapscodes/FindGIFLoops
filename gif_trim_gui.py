@@ -1,13 +1,15 @@
 import argparse
 import sys
+import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from tkinterdnd2 import TkinterDnD, DND_FILES
-from PIL import Image
+from PIL import Image, ImageTk
 import threading
 import time
 
-cancel_flag = threading.Event()  # Flag to indicate if the process should be canceled
+#flag to indicate if the process should be canceled
+cancel_flag = threading.Event()  
 
 def find_duplicate_frame(gif_path):
     #open the gif file
@@ -28,11 +30,11 @@ def find_duplicate_frame(gif_path):
         log_box.insert(tk.END, f"Checking Frame {i+1} / {total_frames}...\n")
         log_box.yview(tk.END)  #scroll to the bottom
 
-        # Periodically check for cancellation
+        #periodically check for cancellation
         if cancel_flag.is_set():
             log_box.insert(tk.END, "Process canceled by user.\n")
             log_box.yview(tk.END)
-            return -1  # Stop processing if the cancel flag is set
+            return -1  #stop processing if the cancel flag is set
 
         #compare the current frame with the first frame
         if list(current_frame.getdata()) == list(first_frame.getdata()):
@@ -42,7 +44,13 @@ def find_duplicate_frame(gif_path):
 
     log_box.insert(tk.END, "No identical frame found.\n")
     log_box.yview(tk.END)
-    return -1  #return -1 if no duplicate was found
+    
+    #show a popup and terminate the program if no loop is found
+    messagebox.showinfo("No Loop Found", "No loop could be found in the GIF.")
+    log_box.insert(tk.END, "No loop could be found in the GIF.\n")
+    log_box.yview(tk.END)
+
+    sys.exit()  #terminate the process immediately
 
 def create_new_gif(input_gif_path, output_gif_path, end_frame):
     #open the original gif
@@ -67,7 +75,7 @@ def create_new_gif(input_gif_path, output_gif_path, end_frame):
         log_box.insert(tk.END, f"Trimming Frame {i + 1}...\n")
         log_box.yview(tk.END)  #scroll to the bottom
 
-        # Periodically check for cancellation
+        #periodically check for cancellation
         if cancel_flag.is_set():
             log_box.insert(tk.END, "Process canceled by user.\n")
             log_box.yview(tk.END)
@@ -78,18 +86,18 @@ def create_new_gif(input_gif_path, output_gif_path, end_frame):
     log_box.yview(tk.END)
 
     frames[0].save(output_gif_path, save_all=True, append_images=frames[1:], duration=gif.info['duration'], loop=0)
-    
+
     #show a popup when the new GIF is created successfully
     messagebox.showinfo("Process Complete", f"Trimmed GIF created at {output_gif_path}")
-    
+
     #print out the results in the log_box
     log_box.insert(tk.END, f"Trimmed GIF created at {output_gif_path}\n")
     log_box.yview(tk.END)
 
-    # Re-enable buttons and hide the cancel button after process finishes
+    #re-enable buttons and grey out the cancel button after process finishes
     trim_button.config(state=tk.NORMAL, bg='green')
     open_button.config(state=tk.NORMAL, bg='green')
-    cancel_button.place_forget()
+    cancel_button.config(state=tk.DISABLED, bg='yellow')
 
 def browse_file():
     file_path = filedialog.askopenfilename(filetypes=[("GIF files", "*.gif")])
@@ -97,11 +105,9 @@ def browse_file():
         gif_path.set(file_path)
         log_box.insert(tk.END, f"Selected file: {file_path}\n")
         log_box.yview(tk.END)
-        
-        # Change trim button to green after a GIF is selected
-        trim_button.config(bg='green')
 
-        # Change "Open GIF Here" button to green after a GIF is selected
+        #make buttons green after GIF selected
+        trim_button.config(bg='green')
         open_button.config(bg='green')
 
 def process_gif():
@@ -111,24 +117,26 @@ def process_gif():
         log_box.yview(tk.END)
         return
 
-    # Disable buttons and show the cancel button while processing
+    #disable buttons and show the cancel button while processing
     trim_button.config(state=tk.DISABLED, bg='yellow')
     open_button.config(state=tk.DISABLED, bg='gray')
-    cancel_button.place(x=180, y=350)  # Place the cancel button at the bottom
+    cancel_button.config(state=tk.NORMAL, bg='red')
 
-    cancel_flag.clear()  # Clear any previous cancel flag
+    cancel_flag.clear()  #clear any previous cancel flag
 
     #find the duplicate frame
     duplicate_frame = find_duplicate_frame(gif_path_str)
 
     if duplicate_frame == -1:
+        # "No loop could be found" case
         log_box.insert(tk.END, "No identical frame found. The entire GIF will be used.\n")
         log_box.yview(tk.END)
-        end_frame = gif.n_frames  #use all frames
-    else:
-        log_box.insert(tk.END, f"Duplicate found at frame {duplicate_frame}.\n")
-        log_box.yview(tk.END)
-        end_frame = duplicate_frame
+        messagebox.showinfo("No Loop Found", "No loop could be found in the GIF.")
+        sys.exit()  #terminate immediately
+
+    log_box.insert(tk.END, f"Duplicate found at frame {duplicate_frame}.\n")
+    log_box.yview(tk.END)
+    end_frame = duplicate_frame
 
     #define the output gif path (same location as input gif)
     output_gif_path = gif_path_str.rsplit('.', 1)[0] + "_trimmed.gif"
@@ -137,10 +145,10 @@ def process_gif():
     create_new_gif(gif_path_str, output_gif_path, end_frame)
 
 def cancel_process():
-    cancel_flag.set()  # Set the cancel flag to stop the process
+    cancel_flag.set()  #set the cancel flag to stop the process
     log_box.insert(tk.END, "Process canceled by user.\n")
     log_box.yview(tk.END)
-    cancel_button.place_forget()  # Hide the cancel button
+    cancel_button.config(state=tk.DISABLED, bg='yellow') 
     trim_button.config(state=tk.NORMAL, bg='green')
     open_button.config(state=tk.NORMAL, bg='green')
 
@@ -152,51 +160,70 @@ def drop_event(event):
     gif_path.set(event.data)
     log_box.insert(tk.END, f"File dropped: {event.data}\n")
     log_box.yview(tk.END)
-    
+
     #change trim button to green after a GIF is selected
     trim_button.config(bg='green')
 
-    # Change "Open GIF Here" button to green after a GIF is selected
+    #change "Open GIF Here" button to green after a GIF is selected
     open_button.config(bg='green')
 
 
 #tkinter gui setup with drag and drop
 root = TkinterDnD.Tk()
-root.title("GIF Trim Tool")
+root.title("GIF Looping Trim Tool")
 
 #set window size
-root.geometry("500x400")
+root.geometry("420x395")
+root.resizable(False, False)
 
-#stringvar to store the file path
-gif_path = tk.StringVar()
+#define logo_path before checking its existence
+logo_path = "gif_trim_logo.png"
+
+#check if the logo file exists and use it as the app icon if it's a PNG image
+if os.path.isfile(logo_path):
+    logo = Image.open(logo_path)
+    logo = logo.resize((150, 150))  #resize to fit the space
+    logo = ImageTk.PhotoImage(logo)
+    root.iconphoto(False, logo)  #set the PNG image as the app icon
+
+#create a frame for the logo and buttons using grid
+top_frame = tk.Frame(root)
+top_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+
+#add the logo on the left
+if os.path.isfile(logo_path):
+    logo_label = tk.Label(top_frame, image=logo)
+    logo_label.grid(row=0, column=0, padx=10, sticky="n")
+
+#create a frame for the buttons and filepath, aligned vertically
+button_frame = tk.Frame(root)
+button_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
 
 #create the "open gif here" button (starts yellow)
-open_button = tk.Button(root, text="Open GIF Here", command=browse_file, height=2, width=20, bg='yellow')
+open_button = tk.Button(button_frame, text="Open GIF Here", command=browse_file, height=2, width=20, bg='yellow')
 open_button.pack(pady=10)
 
 #create the "trim" button (initially red, changes to green when a GIF is selected, then to yellow during processing)
-trim_button = tk.Button(root, text="Trim", command=start_process_in_thread, height=2, width=20, bg='red')
+trim_button = tk.Button(button_frame, text="Trim", command=start_process_in_thread, height=2, width=20, bg='red')
 trim_button.pack(pady=10)
 
-#create a label for the dropped file path
-file_label = tk.Label(root, textvariable=gif_path, wraplength=400)
-file_label.pack(pady=10)
+#create a variable to store the path of the gif when selected (must be defined here)
+gif_path = tk.StringVar()
 
 #create the log box at the bottom
 log_frame = tk.Frame(root)
-log_frame.pack(pady=20)
-
+log_frame.grid(row=1, column=0, columnspan=2, pady=10, sticky="nsew")
 log_box = tk.Text(log_frame, height=10, width=50)
-log_box.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+log_box.pack(side=tk.LEFT, fill=tk.BOTH, expand=False)
 
-#add a scrollbar to the log box
+#add a vertical scrollbar to the log box
 scrollbar = tk.Scrollbar(log_frame, command=log_box.yview)
 scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 log_box.config(yscrollcommand=scrollbar.set)
 
-#cancel button (initially hidden, appears during process)
-cancel_button = tk.Button(root, text="Cancel", command=cancel_process, height=2, width=20, bg='red')
-cancel_button.place_forget()  # Initially hide the button
+#cancel button (initially greyed out, enabled during process)
+cancel_button = tk.Button(root, text="Cancel", command=cancel_process, height=2, width=20, bg='yellow', state=tk.DISABLED)
+cancel_button.grid(row=2, column=0, columnspan=2, sticky="nsew")
 
 #allow drag and drop of gif files
 root.drop_target_register(DND_FILES)
