@@ -1,6 +1,5 @@
-![GIF Duplicate Trimmer Logo](gif_trim_logo.png)
 # GIF Frame Duplicate Trimmer
-A simple python program to turn a normal GIF into a perfectly looping GIF (if possible)
+<img src="gif_trim_logo.png" alt="GIF Duplicate Trimmer Logo" width="150" height="150"/> A simple python program to turn a normal GIF into a perfectly looping GIF (if possible)
 ## Requirements/Usage
 1. Install [Python](https://www.python.org/) from the official Python source/website.
 2. Run the command ```pip install tkinterdnd2 Pillow``` to install tkinterdnd2 and pillow
