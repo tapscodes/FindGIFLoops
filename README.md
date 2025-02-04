@@ -1,3 +1,4 @@
+![GIF Duplicate Trimmer Logo](gif_trim_logo.png)
 # GIF Frame Duplicate Trimmer
 A simple python program to turn a normal GIF into a perfectly looping GIF (if possible)
 ## Requirements/Usage
